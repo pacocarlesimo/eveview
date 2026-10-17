@@ -1,8 +1,12 @@
-"""Live capture of a single window using ScreenCaptureKit."""
+"""Live capture of a single window using ScreenCaptureKit.
+
+Frames are delivered as IOSurfaces (GPU memory) and shown directly by
+Core Animation: no copies, no conversions, no per-frame allocations.
+"""
 import objc
-import Quartz
 from CoreMedia import CMSampleBufferGetImageBuffer, CMTimeMake
 from Foundation import NSObject
+from Quartz import CVPixelBufferGetIOSurface
 from ScreenCaptureKit import SCContentFilter, SCStream, SCStreamConfiguration
 
 try:
@@ -17,7 +21,6 @@ except ImportError:
     _QUEUE = None  # ScreenCaptureKit falls back to a default queue
 
 _PIXEL_FORMAT_BGRA = 1111970369  # FourCC 'BGRA'
-_CI_CONTEXT = Quartz.CIContext.contextWithOptions_(None)
 
 
 class _StreamHandler(
@@ -26,7 +29,7 @@ class _StreamHandler(
 ):
     """Receives frames and stop events from an ``SCStream``.
 
-    Python attributes ``on_frame(cg_image)`` and ``on_stop(error)`` are set by
+    Python attributes ``on_frame(surface)`` and ``on_stop(error)`` are set by
     :class:`WindowCapture`. Both are called from the capture queue, not the
     main thread.
     """
@@ -42,10 +45,9 @@ class _StreamHandler(
                 pixel_buffer = CMSampleBufferGetImageBuffer(sample_buffer)
                 if pixel_buffer is None:  # idle frame: window content unchanged
                     return
-                image = Quartz.CIImage.imageWithCVPixelBuffer_(pixel_buffer)
-                cg_image = _CI_CONTEXT.createCGImage_fromRect_(image, image.extent())
-                if cg_image is not None:
-                    on_frame(cg_image)
+                surface = CVPixelBufferGetIOSurface(pixel_buffer)
+                if surface is not None:
+                    on_frame(surface)
         except Exception as e:
             print(f"[capture] Frame error: {e}")
 
@@ -84,7 +86,7 @@ class WindowCapture:
     :param width: output width in pixels.
     :param height: output height in pixels.
     :param fps: maximum frames per second.
-    :param on_frame: ``callable(cg_image)``, called from the capture queue.
+    :param on_frame: ``callable(surface)``, called from the capture queue.
     :param on_stop: ``callable(error)``, called if the stream stops by itself
         (for example because the window was closed).
     :raises RuntimeError: if the stream output cannot be attached.

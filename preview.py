@@ -1,4 +1,6 @@
 """Preview windows: floating panels that show the live image of one EVE client."""
+import threading
+
 import AppKit
 import objc
 from AppKit import (
@@ -22,10 +24,10 @@ from AppKit import (
     NSWindowStyleMaskBorderless,
     NSWindowStyleMaskNonactivatingPanel,
 )
+from PyObjCTools import AppHelper
 from Quartz import CALayer, CATextLayer, CATransaction, kCAGravityResizeAspect, kCATruncationEnd
 
 import layout
-
 MIN_WIDTH = 120
 MAX_WIDTH = 1600
 #: Distance from the border, in points, where dragging resizes instead of moving.
@@ -231,6 +233,9 @@ class Preview:
         self.font_size = config["name_font_size"]
         self.border_width = 0
         self.border_color = None
+        self._frame_lock = threading.Lock()
+        self._pending_frame = None
+        self._flush_scheduled = False
 
         height = round(width * aspect)
         style = NSWindowStyleMaskBorderless | NSWindowStyleMaskNonactivatingPanel
@@ -291,13 +296,28 @@ class Preview:
         """Set the label text."""
         self.view.label_layer.setString_(f" {name}")
 
-    def set_image(self, cg_image):
-        """Show a new frame. Must be called on the main thread."""
-        if self.closed:
+    def submit_frame(self, surface):
+        """Queue a new frame. Safe to call from any thread.
+
+        Only the most recent frame is kept: if the main thread is busy,
+        older frames are dropped instead of piling up in memory.
+        """
+        with self._frame_lock:
+            self._pending_frame = surface
+            if self._flush_scheduled:
+                return
+            self._flush_scheduled = True
+        AppHelper.callAfter(self._flush_frame)
+
+    def _flush_frame(self):
+        with self._frame_lock:
+            surface, self._pending_frame = self._pending_frame, None
+            self._flush_scheduled = False
+        if surface is None or self.closed:
             return
         CATransaction.begin()
         CATransaction.setDisableActions_(True)
-        self.view.image_layer.setContents_(cg_image)
+        self.view.image_layer.setContents_(surface)
         CATransaction.commit()
 
     def set_active(self, active):

@@ -39,6 +39,7 @@ STRINGS = {
         "open_config": "Open config folder",
         "reload_config": "Reload configuration",
         "quit": "Quit",
+        "sharp_previews": "Sharp previews (Retina)",
     },
     "de": {
         "previews": "Vorschauen",
@@ -54,6 +55,7 @@ STRINGS = {
         "open_config": "Konfigurationsordner öffnen",
         "reload_config": "Konfiguration neu laden",
         "quit": "Beenden",
+        "sharp_previews": "Scharfe Vorschauen (Retina)",
     },
     "fr": {
         "previews": "Aperçus",
@@ -69,6 +71,7 @@ STRINGS = {
         "open_config": "Ouvrir le dossier de configuration",
         "reload_config": "Recharger la configuration",
         "quit": "Quitter",
+        "sharp_previews": "Aperçus nets (Retina)",
     },
     "es": {
         "previews": "Vistas previas",
@@ -84,6 +87,7 @@ STRINGS = {
         "open_config": "Abrir carpeta de configuración",
         "reload_config": "Recargar configuración",
         "quit": "Salir",
+        "sharp_previews": "Vistas previas nítidas (Retina)",
     },
     "ru": {
         "previews": "Превью",
@@ -99,6 +103,7 @@ STRINGS = {
         "open_config": "Открыть папку настроек",
         "reload_config": "Перезагрузить настройки",
         "quit": "Выход",
+        "sharp_previews": "Чёткие превью (Retina)",
     },
     "ja": {
         "previews": "プレビュー",
@@ -114,6 +119,7 @@ STRINGS = {
         "open_config": "設定フォルダを開く",
         "reload_config": "設定を再読み込み",
         "quit": "終了",
+        "sharp_previews": "高精細プレビュー (Retina)",
     },
     "zh": {
         "previews": "预览",
@@ -129,6 +135,7 @@ STRINGS = {
         "open_config": "打开配置文件夹",
         "reload_config": "重新加载配置",
         "quit": "退出",
+        "sharp_previews": "高清预览 (Retina)",
     },
     "ko": {
         "previews": "미리보기",
@@ -144,6 +151,7 @@ STRINGS = {
         "open_config": "설정 폴더 열기",
         "reload_config": "설정 다시 불러오기",
         "quit": "종료",
+        "sharp_previews": "선명한 미리보기 (Retina)",
     },
     "it": {
         "previews": "Anteprime",
@@ -159,6 +167,7 @@ STRINGS = {
         "open_config": "Apri cartella configurazione",
         "reload_config": "Ricarica configurazione",
         "quit": "Esci",
+        "sharp_previews": "Anteprime nitide (Retina)",
     },
 }
 

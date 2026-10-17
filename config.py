@@ -32,6 +32,7 @@ DEFAULTS = {
     },
     "cycle_order": [],
     "characters": {},
+    "retina_previews": True,
 }
 
 

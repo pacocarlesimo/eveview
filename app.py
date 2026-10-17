@@ -32,6 +32,8 @@ REFRESH_SECONDS = 2.0
 #: Seconds between checks of which client has focus.
 FOCUS_SECONDS = 0.25
 FPS_CHOICES = [5, 10, 15, 20, 30, 60]
+#: Frame rate used while a preview is hidden.
+HIDDEN_FPS = 1
 
 #: On/off options shown in the menu: (config key, translation key).
 TOGGLES = [
@@ -40,6 +42,7 @@ TOGGLES = [
     ("hide_active_preview", "hide_active_preview"),
     ("lock_positions", "lock_positions"),
     ("snap_enabled", "snap"),
+    ("retina_previews", "sharp_previews"),
 ]
 
 
@@ -295,10 +298,10 @@ class Controller:
         )
         client.preview = preview
         try:
-            w_px, h_px = preview.pixel_size(self.scale)
+            w_px, h_px = preview.pixel_size(self._capture_scale())
             client.capture = WindowCapture(
                 window, w_px, h_px, self.config["fps"],
-                on_frame=lambda image: AppHelper.callAfter(preview.set_image, image),
+                on_frame=preview.submit_frame,
                 on_stop=lambda error: AppHelper.callAfter(self._capture_stopped, wid, error),
             )
         except Exception as e:
@@ -342,10 +345,17 @@ class Controller:
             screens.append((f.origin.x, f.origin.y, f.size.width, f.size.height))
         return others, screens
 
+    def _capture_scale(self):
+        """Pixels per point used for capture: Retina scale or 1x."""
+        return self.scale if self.config["retina_previews"] else 1.0
+
     def _update_capture(self, client):
-        if client.capture is not None and client.preview is not None:
-            w_px, h_px = client.preview.pixel_size(self.scale)
-            client.capture.update(w_px, h_px, self.config["fps"])
+        """Match capture size to the preview, and throttle hidden previews."""
+        if client.capture is None or client.preview is None:
+            return
+        w_px, h_px = client.preview.pixel_size(self._capture_scale())
+        fps = self.config["fps"] if client.preview.visible else HIDDEN_FPS
+        client.capture.update(w_px, h_px, fps)
 
     @_safe
     def _persist(self, wid):
@@ -432,7 +442,7 @@ class Controller:
         self._apply_states()
 
     def _apply_states(self):
-        """Update border and visibility of every preview."""
+        """Update border, visibility and capture rate of every preview."""
         hide_active = self.config["hide_active_preview"]
         for client in self.clients.values():
             if client.preview is None:
@@ -440,13 +450,13 @@ class Controller:
             is_active = client.wid == self.active_id
             client.preview.set_active(is_active)
             client.preview.set_visible(self.visible and not (hide_active and is_active))
+            self._update_capture(client)
 
     def _apply_config(self):
         """Re-apply styling and capture settings to all previews."""
         for client in self.clients.values():
             if client.preview is not None:
                 client.preview.apply_style(self.config)
-                self._update_capture(client)
         self._apply_states()
 
     # --- menu actions ---
