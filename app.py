@@ -124,8 +124,13 @@ class Controller:
         self.refresh()
         print("EVEView started: look for the 'EVE' icon in the menu bar.")
 
+    def _has_screen_permission(self):
+        """Return whether Screen Recording permission is granted (never shows a prompt)."""
+        return bool(Quartz.CGPreflightScreenCaptureAccess())
+
     def _check_permissions(self):
-        if not Quartz.CGPreflightScreenCaptureAccess():
+        """Ask for missing permissions once, at startup."""
+        if not self._has_screen_permission():
             print("WARNING: 'Screen Recording' permission is missing. Grant it and restart.")
             Quartz.CGRequestScreenCaptureAccess()
         if not switcher.ensure_accessibility(prompt=True):
@@ -243,7 +248,13 @@ class Controller:
 
     @_safe
     def refresh(self):
-        """Scan for EVE windows asynchronously and sync previews on the main thread."""
+        """Scan for EVE windows asynchronously and sync previews on the main thread.
+
+        Skipped while Screen Recording permission is missing: otherwise macOS
+        would show its permission prompt again on every scan.
+        """
+        if not self._has_screen_permission():
+            return
         fetch_eve_windows(lambda windows: AppHelper.callAfter(self._sync, windows))
 
     @_safe
