@@ -85,3 +85,10 @@ macOS 13 Ventura or later.
 EVEView only shows previews and switches windows; it never sends input to more than one client.
 It is a fan project, not affiliated with or endorsed by CCP Games.
 EVE Online is a trademark of CCP hf.
+
+
+
+
+https://github.com/user-attachments/assets/dd20563e-92ad-4e85-b03c-442484614bcb
+
+
